@@ -4,7 +4,7 @@
 ## 安装scons
 * 打开bashrc
   * > vim ~/.bashrc
-* 在scons的目录加载到bashrc末尾
+* 把scons的目录加载到bashrc末尾
   * > alias scons={abs_path}/tools/scons-2.4.1/script/scons
 * 使命令生效
   * > source ~/.bashrc
