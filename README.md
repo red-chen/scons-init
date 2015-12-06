@@ -21,12 +21,12 @@
 ## FAQ
 * 怎么导入依赖的头文件？
   * 在编译之前调用env的Append函数，向CPPPATH中添加头文件的路径
-    * 根目录下的include文件夹：env.Append(CPPPATH=['#/include'])
-    * 当前目录下的include文件夹：env.Append(CPPPATH=['include'])
-    * 系统目录目录下的include文件夹：env.Append(CPPPATH=['/usr/include'])
+    * 导入根目录下的include文件夹：env.Append(CPPPATH=['#/include'])
+    * 导入当前目录下的include文件夹：env.Append(CPPPATH=['include'])
+    * 导入系统目录目录下的include文件夹：env.Append(CPPPATH=['/usr/include'])
 * 怎么导入依赖的库的路径？
   * 在编译之前调用env的Append函数，向LIBPATH中添加包所在的路径
-    * 根目录下的include文件夹：env.Append(LIBPATH=['#/lib'])
-    * 当前目录下的include文件夹：env.Append(LIBPATH=['lib'])
-    * 系统目录目录下的include文件夹：env.Append(LIBPATH=['/usr/lib'])
+    * 导入根目录下的lib文件夹：env.Append(LIBPATH=['#/lib'])
+    * 导入当前目录下的lib文件夹：env.Append(LIBPATH=['lib'])
+    * 导入系统目录目录下的lib文件夹：env.Append(LIBPATH=['/usr/lib'])
 
