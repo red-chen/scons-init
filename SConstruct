@@ -66,7 +66,18 @@ env['BIN_DIR'] = env['PROJECT_ROOT'] + '/bin/'
 if env['mode'] in ['debug']:
     env.MergeFlags('-O0')
 else:
-    pass
+    env.MergeFlags('-O2')
+
+# 警告也报错
+env.MergeFlags('-Wall')
+
+# 开启可调试
+env.MergeFlags('-g')
+
+# 支持C99规范
+env.MergeFlags('-D_GNU_SOURCE')
+env.MergeFlags('-D_XOPEN_SOURCE=500')
+env.MergeFlags('-std=c99')
 
 env.Append(CPPPATH=[])
 
