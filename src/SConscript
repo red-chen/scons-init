@@ -1,0 +1,10 @@
+# -*- mode: python -*-
+
+Import('env')
+
+obj = ['person.c']
+
+env.aStaticLibrary("person_static", obj) 
+env.aSharedLibrary("person_shared", obj) 
+
+env.aSubs('unittest')

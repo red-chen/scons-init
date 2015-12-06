@@ -1,0 +1,16 @@
+# -*- mode: python -*-
+
+Import('env')
+
+env = env.Clone()
+
+env.Append(LIBPATH='#/src/')
+
+obj = Object(Glob("*.c")) 
+
+static_lib = ['person_static']
+shared_lib = ['person_shared']
+
+env.aProgram("person_static_unittest", obj, LIBS=static_lib) 
+env.aProgram("person_shared_unittest", obj, LIBS=shared_lib) 
+
