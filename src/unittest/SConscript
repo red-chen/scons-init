@@ -1,9 +1,9 @@
 # -*- mode: python -*-
+# -*- coding: utf-8 -*-
 
 Import('env')
 
-env = env.Clone()
-
+# 添加依赖的库的路径
 env.Append(LIBPATH='#/src/')
 
 obj = Object(Glob("*.c")) 
