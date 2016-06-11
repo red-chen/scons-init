@@ -1,5 +1,5 @@
-# simple_scons
-基于scons 2.4封装的C/C++项目构建工具
+# Simple Scons
+基于scons 2.4封装的C/C++项目构建工具，支持编译二进制程序、静态库、动态库
 
 ## 安装scons
 * 打开bashrc
