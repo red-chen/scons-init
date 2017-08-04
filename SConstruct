@@ -36,7 +36,8 @@ env.AddMethod(aSubs)
 # 编译目标程序
 def aProgram(self, target=None, source=None, **kwargs):
     target = self.Program(target, source, CFLAGS=self['CFLAGS'], CPPPATH=self['CPPPATH'], **kwargs)
-    self.Default(self.Install(self['BIN_DIR'], target))
+    install = self.Install(self['BIN_DIR'], target)
+    self.Default(install)
     return target
 env.AddMethod(aProgram)
 
@@ -55,10 +56,43 @@ def aSharedLibrary(self, *args, **kwargs):
     return target
 env.AddMethod(aSharedLibrary)
 
+# 打包发布包
+env.Append(BUILDERS = {"_Md5sum": Builder(
+                                  action = "md5sum $SOURCE > $TARGET", 
+                                  src_suffix=".tar.gz",
+                                  suffix = ".tar.gz.md5"
+                                  )})
+env.Append(BUILDERS = {"_Package": Builder(
+                                  action = "tar czvf $TARGET -C $new_source `ls $new_source`", 
+                                  suffix = ".tar.gz")})
+
+def aPackage(self, target, files):
+    path = "%s/package/temp"%(env['PROJECT_DIR'])
+    if not os.path.isdir(path):
+        os.makedirs(path)
+
+    pg = self._Package(
+        target = "#package/%s"%(target),
+        source = [],
+        # 不用source，target和source会用于判断依赖 
+        new_source='package/temp/%s'%(target)
+    )
+
+    for t, s in files:
+        install = env.Install('#package/temp/%s/%s' % (target, t), s)
+        self.Depends(pg, install)
+
+    md5 = self._Md5sum("#package/%s"%(target))
+    self.Default(pg)
+    self.Depends(md5, pg)
+    self.Default(md5)
+env.AddMethod(aPackage)
+
 # =============================================================================
 # 预置公共使用的环境变量
 # '#' 表示根目录
 # =============================================================================
+env['PROJECT_DIR'] = os.getcwd()
 env['PROJECT_ROOT'] = '#'
 env['LIB_DIR'] = env['PROJECT_ROOT'] + '/lib/'
 env['BIN_DIR'] = env['PROJECT_ROOT'] + '/bin/'

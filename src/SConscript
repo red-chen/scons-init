@@ -12,4 +12,6 @@ obj = ['person.c']
 env.aStaticLibrary("person_static", obj) 
 env.aSharedLibrary("person_shared", obj) 
 
+env.aPackage("test", [("lib/", "#lib/libperson_static.a"), ("lib/", "#lib/libperson_shared.so")])
+
 env.aSubs('unittest')
