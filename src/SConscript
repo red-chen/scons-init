@@ -2,16 +2,10 @@
 # -*- coding: utf-8 -*-
 
 Import('env')
+
 env = env.Clone()
 
-env.Append(CPPPATH=['#/src/'])
-env.Append(LIBPATH=['#/lib/'])
+env.Append(GOPATH=['#deps'])
 
-obj = ['person.c']
+env.aGoBuild("hello", "main.go")
 
-env.aStaticLibrary("person_static", obj) 
-env.aSharedLibrary("person_shared", obj) 
-
-env.aPackage("test", [("lib/", "#lib/libperson_static.a"), ("lib/", "#lib/libperson_shared.so")])
-
-env.aSubs('unittest')

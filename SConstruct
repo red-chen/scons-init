@@ -9,6 +9,7 @@ import sys
 import os
 import os.path
 import SCons.Util
+import subprocess
 
 env = Environment() 
 env.Decider('MD5-timestamp')
@@ -37,14 +38,17 @@ env.AddMethod(aSubs)
 def aProgram(self, target=None, source=None, **kwargs):
     target = self.Program(target, source, CFLAGS=self['CFLAGS'], CPPPATH=self['CPPPATH'], **kwargs)
     install = self.Install(self['BIN_DIR'], target)
-    self.Default(install)
+    #self.Default(install)
+    self.Alias("build", install)
     return target
 env.AddMethod(aProgram)
 
 # 生成静态库
 def aStaticLibrary(self, target=None, source=None, **kwargs):
     target = self.StaticLibrary(target, source, **kwargs)
-    self.Default(env.Install(self['LIB_DIR'], target))
+    install_to_lib = env.Install(self['LIB_DIR'], target)
+    #self.Default(install_to_lib)
+    self.Alias("lib", install_to_lib)
     return target
 env.AddMethod(aStaticLibrary)
 
@@ -52,7 +56,9 @@ env.AddMethod(aStaticLibrary)
 def aSharedLibrary(self, *args, **kwargs):
     shlink_flags = SCons.Util.CLVar(self.subst('$SHLINKFLAGS'))
     target = self.SharedLibrary(SHLINKFLAGS=shlink_flags, *args, **kwargs)
-    self.Default(self.Install(self['LIB_DIR'], target))
+    install_to_lib = self.Install(self['LIB_DIR'], target)
+    #self.Default(install_to_lib)
+    self.Alias("lib", install_to_lib)
     return target
 env.AddMethod(aSharedLibrary)
 
@@ -83,10 +89,40 @@ def aPackage(self, target, files):
         self.Depends(pg, install)
 
     md5 = self._Md5sum("#package/%s"%(target))
-    self.Default(pg)
+    #self.Default(pg)
     self.Depends(md5, pg)
-    self.Default(md5)
+    #self.Default(md5)
+    self.Alias("package", md5)
 env.AddMethod(aPackage)
+
+def _set_GOPATH(self):
+    GOPATH = ""
+    for x in self['GOPATH']:
+        if GOPATH:
+            GOPATH = "%s:%s" % (GOPATH,self.Dir(x).abspath)
+        else:
+            GOPATH = self.Dir(x).abspath
+
+    os.environ['GOPATH'] = GOPATH
+
+# Golang编译
+def aGoBuild(self, target=None, source=None, **kwargs):
+    # set GOPATH
+    _set_GOPATH(self)
+    
+    # go build -o {target} {source}
+    def _go(target, source, env):
+        assert len(target) == 1
+        assert len(source) == 1
+        target = target[0]
+        source = source[0]
+        assert target.isfile() or not target.exists()
+
+        print [env['GO_COMPILER'], "build", "-o", target.abspath, source.abspath]
+        subprocess.check_call([env['GO_COMPILER'], "build", "-o", target.abspath, source.abspath], cwd = env['PROJECT_DIR'])
+    go_build = self.Command(target, source, _go)
+    self.Alias("go", go_build)
+env.AddMethod(aGoBuild)
 
 # =============================================================================
 # 预置公共使用的环境变量
@@ -96,7 +132,7 @@ env['PROJECT_DIR'] = os.getcwd()
 env['PROJECT_ROOT'] = '#'
 env['LIB_DIR'] = env['PROJECT_ROOT'] + '/lib/'
 env['BIN_DIR'] = env['PROJECT_ROOT'] + '/bin/'
-
+env['GO_COMPILER'] = '%s/tools/golang/bin/go' % (env['PROJECT_DIR'])
 if env['mode'] in ['debug']:
     env.MergeFlags('-O0')
 else:
@@ -114,5 +150,8 @@ env.MergeFlags('-D_XOPEN_SOURCE=500')
 env.MergeFlags('-std=c99')
 
 env.Append(CPPPATH=[])
+env.Append(GOPATH=[])
+
+os.environ['GOROOT'] = '%s/tools/golang'%(env['PROJECT_DIR'])
 
 env.aSubs('src')
