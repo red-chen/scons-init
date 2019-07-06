@@ -4,14 +4,13 @@
 Import('env')
 env = env.Clone()
 
-env.Append(CPPPATH=['#/src/'])
-env.Append(LIBPATH=['#/lib/'])
+env.Append(LIBPATH=['$LIB_DIR'])
 
 obj = ['person.c']
 
 env.aStaticLibrary("person_static", obj) 
 env.aSharedLibrary("person_shared", obj) 
 
-env.aPackage("test", [("lib/", "#lib/libperson_static.a"), ("lib/", "#lib/libperson_shared.so")])
+env.aPackage("test", [("lib/", "$LIB_DIR/libperson_static.a"), ("lib/", "$LIB_DIR/libperson_shared.so")])
 
 env.aSubs('unittest')

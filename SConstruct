@@ -94,8 +94,10 @@ env.AddMethod(aPackage)
 # =============================================================================
 env['PROJECT_DIR'] = os.getcwd()
 env['PROJECT_ROOT'] = '#'
-env['LIB_DIR'] = env['PROJECT_ROOT'] + '/lib/'
-env['BIN_DIR'] = env['PROJECT_ROOT'] + '/bin/'
+env['BUILD_DIR'] = env['PROJECT_ROOT'] + '/build/' + env['mode']
+env['HEADER_DIR']= env['BUILD_DIR'] + '/include/'
+env['LIB_DIR']   = env['BUILD_DIR'] + '/lib/'
+env['BIN_DIR']   = env['BUILD_DIR'] + '/bin/'
 
 if env['mode'] in ['debug']:
     env.MergeFlags('-O0')
@@ -115,4 +117,62 @@ env.MergeFlags('-std=c99')
 
 env.Append(CPPPATH=[])
 
-env.aSubs('src')
+# =============================================================================
+## 初始化工作空间
+## 将当期的所有文件link到BUILD_DIR下
+# =============================================================================
+def _makeBuildDir():
+    for d in [env['BUILD_DIR'], env['HEADER_DIR'], env['LIB_DIR'], env['BIN_DIR']]:
+        d = env.Dir(d).abspath
+        if not os.path.exists(d):
+            os.makedirs(d)
+        assert os.path.isdir(d)
+
+def _cleanBuildDir():
+    buildDir = env.Dir(env['BUILD_DIR']).abspath
+    for rt, dirs, files in os.walk(buildDir):
+        try:
+            dirs.remove('.git')
+        except:
+            pass
+        for f in files:
+            f = os.path.join(rt, f)
+            if os.path.islink(f) or f.endswith('.gcno') or f.endswith('.gcda'):
+                os.remove(f)
+
+def _firstDirName(p):
+    x = p
+    y = os.path.dirname(p)
+    while len(y) > 0:
+        x = y
+        y = os.path.dirname(x)
+    return x
+
+def _cloneFile(rt, fn):
+    d = os.path.join(env.Dir(env['BUILD_DIR']).path, rt)
+    if not os.path.exists(d):
+        os.makedirs(d)
+    os.symlink(os.path.abspath(os.path.join(rt, fn)), os.path.join(d, fn))
+
+def _cloneWorkspace():
+    buildDir = _firstDirName(env.Dir(env['BUILD_DIR']).path)
+    paths = os.listdir('.')
+    for x in [buildDir, '.git', '.gitignore', '.sconsign.dblite', 'SConstruct']:
+        try:
+            paths.remove(x)
+        except:
+            pass
+    for x in paths:
+        if os.path.isfile(x):
+            _cloneFile('', x)
+        if os.path.isdir(x):
+            for rt, _, files in os.walk(x):
+                for f in files:
+                    _cloneFile(rt, f)
+
+_makeBuildDir()
+_cleanBuildDir()
+_cloneWorkspace()
+
+# 入口
+env.SConscript('$BUILD_DIR/SConscript', exports='env')
